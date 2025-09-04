@@ -44,9 +44,24 @@
       background: #0056b3;
     }
 
+    .options-container {
+      margin: 20px auto;
+      max-width: 800px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .options-container label {
+      display: inline-block;
+      margin: 5px 10px;
+      font-size: 14px;
+    }
+
     .table-container {
       margin-top: 20px;
-      overflow-x: auto; /* Scroll ngang khi màn hình nhỏ */
+      overflow-x: auto; /* Scroll ngang trên mobile */
       background: white;
       padding: 10px;
       border-radius: 8px;
@@ -86,6 +101,11 @@
   <input type="text" id="searchBox" placeholder="Nhập POSID hoặc POSID cũ">
   <button id="searchBtn">Tìm kiếm</button>
 
+  <div class="options-container">
+    <strong>Chọn cột hiển thị:</strong><br>
+    <div id="fieldOptions"></div>
+  </div>
+
   <div class="table-container">
     <table id="resultTable">
       <thead id="tableHead"></thead>
@@ -96,22 +116,46 @@
   <script>
     let data = [];
 
-    // Load dữ liệu từ data.json
-    fetch("data.json")
-      .then(response => response.json())
-      .then(json => data = json)
-      .catch(err => console.error("Lỗi tải JSON:", err));
+    // 🔹 Load dữ liệu từ Google Apps Script API hoặc file JSON
+    fetch("data.json") // 👉 đổi thành link API Google Script của bạn
+      .then(res => res.json())
+      .then(json => {
+        data = json;
+        if (data.length > 0) {
+          renderFieldOptions(Object.keys(data[0]));
+        }
+      })
+      .catch(err => console.error("Lỗi tải dữ liệu:", err));
 
-    // Hàm tìm kiếm
+    // Tạo checkbox cho các cột
+    function renderFieldOptions(headers) {
+      const container = document.getElementById("fieldOptions");
+      headers.forEach(h => {
+        container.innerHTML += `
+          <label>
+            <input type="checkbox" value="${h}" checked> ${h}
+          </label>
+        `;
+      });
+    }
+
+    // Tìm kiếm
     document.getElementById("searchBtn").addEventListener("click", searchPOSID);
+    document.getElementById("searchBox").addEventListener("keypress", e => {
+      if (e.key === "Enter") searchPOSID();
+    });
 
     function searchPOSID() {
       const input = document.getElementById("searchBox").value.trim();
       if (!input) return;
 
       const results = data.filter(item =>
-        String(item["posid"]) === input || String(item["posid cũ"]) === input
+        String(item["POSID"]) === input || String(item["POSID Cũ"]) === input
       );
+
+      const selectedFields = Array.from(
+        document.querySelectorAll("#fieldOptions input:checked")
+      ).map(cb => cb.value);
 
       const table = document.getElementById("resultTable");
       const thead = document.getElementById("tableHead");
@@ -121,12 +165,13 @@
       tbody.innerHTML = "";
 
       if (results.length > 0) {
-        const headers = Object.keys(results[0]);
-        let headRow = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+        // Render header
+        let headRow = "<tr>" + selectedFields.map(h => `<th>${h}</th>`).join("") + "</tr>";
         thead.innerHTML = headRow;
 
+        // Render body
         results.forEach(row => {
-          let rowHTML = "<tr>" + headers.map(h => `<td>${row[h] ?? ""}</td>`).join("") + "</tr>";
+          let rowHTML = "<tr>" + selectedFields.map(h => `<td>${row[h] ?? ""}</td>`).join("") + "</tr>";
           tbody.innerHTML += rowHTML;
         });
 
