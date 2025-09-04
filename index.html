@@ -3,185 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tra cứu POSID</title>
+  <title>Tra cứu POS</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f6fa;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    #searchBox {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      font-size: 16px;
-      margin: 0 auto;
-      display: block;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    #searchBtn {
-      display: block;
-      margin: 15px auto;
-      padding: 10px 20px;
-      background: #007BFF;
-      color: white;
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    nav { margin-bottom: 20px; }
+    nav button {
+      margin-right: 10px;
+      padding: 10px 15px;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
+      background: #007bff;
+      color: #fff;
       cursor: pointer;
-      font-size: 16px;
     }
-
-    #searchBtn:hover {
-      background: #0056b3;
-    }
-
-    .options-container {
-      margin: 20px auto;
-      max-width: 800px;
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .options-container label {
-      display: inline-block;
-      margin: 5px 10px;
-      font-size: 14px;
-    }
-
-    .table-container {
-      margin-top: 20px;
-      overflow-x: auto; /* Scroll ngang trên mobile */
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: #fff;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      white-space: nowrap; /* Không xuống dòng */
-    }
-
-    th {
-      background: #007BFF;
-      color: white;
-      font-weight: bold;
-    }
-
-    tr:nth-child(even) td {
-      background: #f9f9f9;
-    }
-
-    #resultTable {
-      display: none;
-    }
+    nav button.active { background: #0056b3; }
+    section { display: none; }
+    section.active { display: block; }
+    .table-container { overflow-x: auto; margin-top: 15px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; white-space: nowrap; }
+    th { background: #f5f5f5; }
   </style>
 </head>
 <body>
-  <h1>Tra cứu POSID</h1>
-  <input type="text" id="searchBox" placeholder="Nhập POSID hoặc POSID cũ">
-  <button id="searchBtn">Tìm kiếm</button>
 
-  <div class="options-container">
-    <strong>Chọn cột hiển thị:</strong><br>
-    <div id="fieldOptions"></div>
-  </div>
+  <h2>📋 Hệ thống tra cứu</h2>
+  <nav>
+    <button onclick="showTab('posidTab')" class="active">Tra cứu POSID</button>
+    <button onclick="showTab('hanTab')">Tra cứu hạn</button>
+  </nav>
 
-  <div class="table-container">
-    <table id="resultTable">
-      <thead id="tableHead"></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+  <!-- Tab 1: Tra cứu POSID -->
+  <section id="posidTab" class="active">
+    <h3>🔎 Tra cứu POSID</h3>
+    <input type="text" id="posidSearch" placeholder="Nhập POSID hoặc POSID cũ">
+    <button onclick="searchPOSID()">Tìm kiếm</button>
+    <div id="posidFields"></div>
+    <div class="table-container">
+      <table id="posidTable">
+        <thead id="posidHead"></thead>
+        <tbody id="posidBody"></tbody>
+      </table>
+    </div>
+  </section>
 
-  <script>
-    let data = [];
+  <!-- Tab 2: Tra cứu hạn -->
+  <section id="hanTab">
+    <h3>📅 Tra cứu hạn</h3>
+    <input type="text" id="hanSearch" placeholder="Nhập mã / tên cần tra cứu">
+    <button onclick="searchHAN()">Tìm kiếm</button>
+    <div id="hanFields"></div>
+    <div class="table-container">
+      <table id="hanTable">
+        <thead id="hanHead"></thead>
+        <tbody id="hanBody"></tbody>
+      </table>
+    </div>
+  </section>
 
-    // 🔹 Load dữ liệu từ Google Apps Script API hoặc file JSON
-    fetch("https://script.google.com/macros/s/AKfycbxEudil6z1OauDNKoHvH8TLjBS6NkqxqYycJKCNNQid2v2z7BMbb-uA5doZ8s_NZMrl/exec") // 👉 đổi thành link API Google Script của bạn
-      .then(res => res.json())
-      .then(json => {
-        data = json;
-        if (data.length > 0) {
-          renderFieldOptions(Object.keys(data[0]));
-        }
-      })
-      .catch(err => console.error("Lỗi tải dữ liệu:", err));
+<script>
+  let dataPOS = [];
+  let dataHAN = [];
 
-    // Tạo checkbox cho các cột
-    function renderFieldOptions(headers) {
-      const container = document.getElementById("fieldOptions");
-      headers.forEach(h => {
-        container.innerHTML += `
-          <label>
-            <input type="checkbox" value="${h}" checked> ${h}
-          </label>
-        `;
-      });
-    }
+  // Hàm chuyển tab
+  function showTab(tabId) {
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    event.target.classList.add("active");
+  }
 
-    // Tìm kiếm
-    document.getElementById("searchBtn").addEventListener("click", searchPOSID);
-    document.getElementById("searchBox").addEventListener("keypress", e => {
-      if (e.key === "Enter") searchPOSID();
+  // === Load dữ liệu từ API Google Apps Script ===
+  async function loadData() {
+    // Ví dụ API trả về theo sheet
+    let resPOS = await fetch("https://script.google.com/macros/s/xxxx/exec?sheet=POS");
+    let resHAN = await fetch("https://script.google.com/macros/s/yyyy/exec?sheet=HAN");
+
+    dataPOS = await resPOS.json();
+    dataHAN = await resHAN.json();
+
+    renderFieldOptions("posidFields", Object.keys(dataPOS[0]), "posid");
+    renderFieldOptions("hanFields", Object.keys(dataHAN[0]), "han");
+  }
+
+  function renderFieldOptions(containerId, headers, prefix) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "<p>Chọn cột hiển thị:</p>";
+    headers.forEach(h => {
+      container.innerHTML += `
+        <label><input type="checkbox" class="${prefix}Field" value="${h}" checked> ${h}</label><br>
+      `;
     });
+  }
 
-    function searchPOSID() {
-      const input = document.getElementById("searchBox").value.trim();
-      if (!input) return;
+  function searchPOSID() {
+    const input = document.getElementById("posidSearch").value.trim();
+    const results = dataPOS.filter(item =>
+      String(item["posid"]) === input || String(item["posid cũ"]) === input
+    );
+    renderTable(results, "posidTable", "posidHead", "posidBody", ".posidField");
+  }
 
-      const results = data.filter(item =>
-        String(item["POSID"]) === input || String(item["POSID Cũ"]) === input
-      );
+  function searchHAN() {
+    const input = document.getElementById("hanSearch").value.trim();
+    const results = dataHAN.filter(item =>
+      Object.values(item).some(v => String(v).toLowerCase().includes(input.toLowerCase()))
+    );
+    renderTable(results, "hanTable", "hanHead", "hanBody", ".hanField");
+  }
 
-      const selectedFields = Array.from(
-        document.querySelectorAll("#fieldOptions input:checked")
-      ).map(cb => cb.value);
+  function renderTable(results, tableId, headId, bodyId, fieldSelector) {
+    const table = document.getElementById(tableId);
+    const thead = document.getElementById(headId);
+    const tbody = document.getElementById(bodyId);
 
-      const table = document.getElementById("resultTable");
-      const thead = document.getElementById("tableHead");
-      const tbody = document.getElementById("tableBody");
+    const selectedFields = Array.from(document.querySelectorAll(fieldSelector + ":checked"))
+      .map(cb => cb.value);
 
-      thead.innerHTML = "";
-      tbody.innerHTML = "";
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
 
-      if (results.length > 0) {
-        // Render header
-        let headRow = "<tr>" + selectedFields.map(h => `<th>${h}</th>`).join("") + "</tr>";
-        thead.innerHTML = headRow;
+    if (results.length > 0) {
+      let headRow = "<tr>" + selectedFields.map(h => `<th>${h}</th>`).join("") + "</tr>";
+      thead.innerHTML = headRow;
 
-        // Render body
-        results.forEach(row => {
-          let rowHTML = "<tr>" + selectedFields.map(h => `<td>${row[h] ?? ""}</td>`).join("") + "</tr>";
-          tbody.innerHTML += rowHTML;
-        });
+      results.forEach(row => {
+        let rowHTML = "<tr>" + selectedFields.map(h => `<td>${row[h] ?? ""}</td>`).join("") + "</tr>";
+        tbody.innerHTML += rowHTML;
+      });
 
-        table.style.display = "table";
-      } else {
-        table.style.display = "none";
-        alert("Không tìm thấy POSID!");
-      }
+      table.style.display = "table";
+    } else {
+      table.style.display = "none";
+      alert("Không tìm thấy dữ liệu!");
     }
-  </script>
+  }
+
+  loadData();
+</script>
+
 </body>
 </html>
-
