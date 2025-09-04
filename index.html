@@ -2,93 +2,139 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tra cứu POSID</title>
   <style>
-    body {font-family: Arial, sans-serif; background:#f4f6f9; padding:20px;}
-    h2 {color:#333;}
-    input, button {padding:8px 12px; font-size:14px; margin:5px 0;}
-    button {background:#007BFF; border:none; color:#fff; border-radius:4px; cursor:pointer;}
-    button:hover {background:#0056b3;}
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    #searchBox {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      font-size: 16px;
+      margin: 0 auto;
+      display: block;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #searchBtn {
+      display: block;
+      margin: 15px auto;
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #searchBtn:hover {
+      background: #0056b3;
+    }
+
+    .table-container {
+      margin-top: 20px;
+      overflow-x: auto; /* Scroll ngang khi màn hình nhỏ */
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
     table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 15px;
-        background: #fff;
-      }
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+    }
 
-      th, td {
-        border: 1px solid #ccc;  /* Kẻ ô */
-        padding: 8px;
-        text-align: left;
-        vertical-align: top; 
-        white-space: nowrap;   /* Không xuống dòng */
-      }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      white-space: nowrap; /* Không xuống dòng */
+    }
 
-      th {
-        background: #007BFF;
-        color: white;
-        font-weight: bold;
-      }
-    .warning {color:#d9534f; font-weight:bold; margin-top:10px;}
+    th {
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) td {
+      background: #f9f9f9;
+    }
+
+    #resultTable {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h2>🔎 Tra cứu POSID</h2>
-  <input type="text" id="searchInput" placeholder="Nhập POSID hoặc POSID cũ">
+  <h1>Tra cứu POSID</h1>
+  <input type="text" id="searchBox" placeholder="Nhập POSID hoặc POSID cũ">
   <button id="searchBtn">Tìm kiếm</button>
-  <div id="result"></div>
+
+  <div class="table-container">
+    <table id="resultTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
   <script>
     let data = [];
 
-    // Load file JSON
+    // Load dữ liệu từ data.json
     fetch("data.json")
-      .then(res => res.json())
-      .then(json => {
-        data = json;
-        console.log("✅ Đã load JSON:", data);
-      })
-      .catch(err => console.error("❌ Lỗi load JSON:", err));
+      .then(response => response.json())
+      .then(json => data = json)
+      .catch(err => console.error("Lỗi tải JSON:", err));
 
+    // Hàm tìm kiếm
     document.getElementById("searchBtn").addEventListener("click", searchPOSID);
 
     function searchPOSID() {
-      const input = document.getElementById("searchInput").value.trim();
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "";
+      const input = document.getElementById("searchBox").value.trim();
+      if (!input) return;
 
-      if (!input) {
-        resultDiv.innerHTML = "<div class='warning'>⚠️ Vui lòng nhập POSID.</div>";
-        return;
-      }
-
-      // So sánh bằng chuỗi để không bị mất số 0
-      const results = data.filter(item => 
+      const results = data.filter(item =>
         String(item["posid"]) === input || String(item["posid cũ"]) === input
       );
 
-      if (results.length === 0) {
-        resultDiv.innerHTML = "<div class='warning'>⚠️ Không tìm thấy kết quả.</div>";
-        return;
+      const table = document.getElementById("resultTable");
+      const thead = document.getElementById("tableHead");
+      const tbody = document.getElementById("tableBody");
+
+      thead.innerHTML = "";
+      tbody.innerHTML = "";
+
+      if (results.length > 0) {
+        const headers = Object.keys(results[0]);
+        let headRow = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+        thead.innerHTML = headRow;
+
+        results.forEach(row => {
+          let rowHTML = "<tr>" + headers.map(h => `<td>${row[h] ?? ""}</td>`).join("") + "</tr>";
+          tbody.innerHTML += rowHTML;
+        });
+
+        table.style.display = "table";
+      } else {
+        table.style.display = "none";
+        alert("Không tìm thấy POSID!");
       }
-
-      // Render bảng
-      let table = "<table><tr>";
-      for (const key in results[0]) {
-        table += `<th>${key}</th>`;
-      }
-      table += "</tr>";
-
-      results.forEach(record => {
-        table += "<tr>";
-        for (const key in record) {
-          table += `<td>${record[key]}</td>`;
-        }
-        table += "</tr>";
-      });
-
-      table += "</table>";
-      resultDiv.innerHTML = table;
     }
   </script>
 </body>
