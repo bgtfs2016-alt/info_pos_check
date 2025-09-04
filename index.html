@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Tra cứu POSID</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#f4f6f9; padding:20px;}
+    h2 {color:#333;}
+    input, button {padding:8px 12px; font-size:14px; margin:5px 0;}
+    button {background:#007BFF; border:none; color:#fff; border-radius:4px; cursor:pointer;}
+    button:hover {background:#0056b3;}
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 15px;
+        background: #fff;
+      }
+
+      th, td {
+        border: 1px solid #ccc;  /* Kẻ ô */
+        padding: 8px;
+        text-align: left;
+        vertical-align: top; 
+        white-space: nowrap;   /* Không xuống dòng */
+      }
+
+      th {
+        background: #007BFF;
+        color: white;
+        font-weight: bold;
+      }
+    .warning {color:#d9534f; font-weight:bold; margin-top:10px;}
+  </style>
+</head>
+<body>
+  <h2>🔎 Tra cứu POSID</h2>
+  <input type="text" id="searchInput" placeholder="Nhập POSID hoặc POSID cũ">
+  <button id="searchBtn">Tìm kiếm</button>
+  <div id="result"></div>
+
+  <script>
+    let data = [];
+
+    // Load file JSON
+    fetch("data.json")
+      .then(res => res.json())
+      .then(json => {
+        data = json;
+        console.log("✅ Đã load JSON:", data);
+      })
+      .catch(err => console.error("❌ Lỗi load JSON:", err));
+
+    document.getElementById("searchBtn").addEventListener("click", searchPOSID);
+
+    function searchPOSID() {
+      const input = document.getElementById("searchInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+
+      if (!input) {
+        resultDiv.innerHTML = "<div class='warning'>⚠️ Vui lòng nhập POSID.</div>";
+        return;
+      }
+
+      // So sánh bằng chuỗi để không bị mất số 0
+      const results = data.filter(item => 
+        String(item["posid"]) === input || String(item["posid cũ"]) === input
+      );
+
+      if (results.length === 0) {
+        resultDiv.innerHTML = "<div class='warning'>⚠️ Không tìm thấy kết quả.</div>";
+        return;
+      }
+
+      // Render bảng
+      let table = "<table><tr>";
+      for (const key in results[0]) {
+        table += `<th>${key}</th>`;
+      }
+      table += "</tr>";
+
+      results.forEach(record => {
+        table += "<tr>";
+        for (const key in record) {
+          table += `<td>${record[key]}</td>`;
+        }
+        table += "</tr>";
+      });
+
+      table += "</table>";
+      resultDiv.innerHTML = table;
+    }
+  </script>
+</body>
+</html>
