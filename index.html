@@ -76,8 +76,8 @@
   // === Load dữ liệu từ API Google Apps Script ===
   async function loadData() {
     // Ví dụ API trả về theo sheet
-    let resPOS = await fetch("https://script.google.com/macros/s/xxxx/exec?sheet=POS");
-    let resHAN = await fetch("https://script.google.com/macros/s/yyyy/exec?sheet=HAN");
+    let resPOS = await fetch("https://script.google.com/macros/s/AKfycbxocm-SrtfQRdlNwMPbPKfTp61AV8v-aDu0-c1j8wSMOt-Bl06tMxg7bFRbrjvtX7m1/exec?sheet=MasterAsset");
+    let resHAN = await fetch("https://script.google.com/macros/s/AKfycbxocm-SrtfQRdlNwMPbPKfTp61AV8v-aDu0-c1j8wSMOt-Bl06tMxg7bFRbrjvtX7m1/exec?sheet=Vi_tri_month");
 
     dataPOS = await resPOS.json();
     dataHAN = await resHAN.json();
@@ -99,7 +99,7 @@
   function searchPOSID() {
     const input = document.getElementById("posidSearch").value.trim();
     const results = dataPOS.filter(item =>
-      String(item["posid"]) === input || String(item["posid cũ"]) === input
+      String(item["POSID"]) === input || String(item["POSID Cũ"]) === input
     );
     renderTable(results, "posidTable", "posidHead", "posidBody", ".posidField");
   }
@@ -144,3 +144,4 @@
 
 </body>
 </html>
+
