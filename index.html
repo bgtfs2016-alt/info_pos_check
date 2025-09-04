@@ -117,7 +117,7 @@
     let data = [];
 
     // 🔹 Load dữ liệu từ Google Apps Script API hoặc file JSON
-    fetch("data.json") // 👉 đổi thành link API Google Script của bạn
+    fetch("https://script.google.com/macros/s/AKfycbxEudil6z1OauDNKoHvH8TLjBS6NkqxqYycJKCNNQid2v2z7BMbb-uA5doZ8s_NZMrl/exec") // 👉 đổi thành link API Google Script của bạn
       .then(res => res.json())
       .then(json => {
         data = json;
@@ -184,3 +184,4 @@
   </script>
 </body>
 </html>
+
